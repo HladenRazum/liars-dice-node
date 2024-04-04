@@ -1,0 +1,11 @@
+const NUM_DIE_SIDES = 6;
+const DICE_PER_PLAYER = 5;
+const NUM_PLAYERS = 3;
+const CHALLENGE_SYMBOL = "C";
+
+module.exports = {
+  NUM_DIE_SIDES,
+  DICE_PER_PLAYER,
+  NUM_PLAYERS,
+  CHALLENGE_SYMBOL,
+};

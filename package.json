@@ -1,0 +1,12 @@
+{
+  "name": "liars-dice",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "keywords": [],
+  "author": "Krasimir Kostadinov",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2"
+  }
+}
