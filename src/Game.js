@@ -11,7 +11,7 @@ const log = console.log;
 
 const Player = require("./Player");
 const { NUM_DIE_SIDES } = require("./constants");
-const { faceToString, drawDie } = require("./utils");
+const { faceToString, drawDie, drawDice } = require("./utils");
 
 class Game {
   numPlayers;
@@ -32,7 +32,14 @@ class Game {
     this.isWinning = false;
     this.currentPlayer = null;
     this.lastPlayer = null;
-    this.rolls = {};
+    this.rolls = {
+      '1': 0,
+      '2': 0,
+      '3': 0,
+      '4': 0,
+      '5': 0,
+      '6': 0
+    };
     this.setup();
   }
 
@@ -44,19 +51,21 @@ class Game {
   logCurrentRolls() {
     log(chalk.hex(chalk.notification)("Here are the current rolls: \n"));
 
-    for (const key in this.rolls) {
-      if (this.rolls[key] > 0) {
-        log(`(${chalk.yellow(this.rolls[key])}) ${drawDie(key)}\n`);
-      }
-    }
+    drawDice(this.rolls)
 
-    for (const key in this.rolls) {
-      if (this.rolls[key] > 0) {
-        console.log(`(${chalk.yellow(this.rolls[key])}) ${faceToString(key)}`);
-      }
-    }
+    // for (const key in this.rolls) {
+    //   if (this.rolls[key] > 0) {
+    //     log(`(${chalk.yellow(this.rolls[key])}) ${drawDie(key)}\n`);
+    //   }
+    // }
 
-    log("\n");
+    // for (const key in this.rolls) {
+      
+    //     console.log(`(${chalk.yellow(this.rolls[key] ?? 0)}) ${faceToString(key)}`);
+      
+    // }
+
+    // log("\n");
   }
 
   initPlayers() {
