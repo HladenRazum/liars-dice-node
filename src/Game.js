@@ -86,6 +86,13 @@ class Game {
     }
   }
 
+  updatePlayersPositionInTheArray(player) {
+    let playerIndex = this.players.indexOf(player);
+    this.players = this.players
+      .slice(playerIndex)
+      .concat(this.players.slice(0, playerIndex));
+  }
+
   updateRolls() {
     this.rolls = {};
     let dice = [];
@@ -116,7 +123,6 @@ class Game {
     this.updateRolls();
   }
 
-  // TODO: Check if only one player has dice
   checkWinning() {
     let playersWithDiceCount = 0;
 
@@ -182,6 +188,7 @@ class Game {
     this.logCurrentRolls();
     if (this.checkChallenge()) {
       this.lastPlayer.removeDie();
+      this.updatePlayersPositionInTheArray(this.lastPlayer);
       this.lastPlayerThatLostADice = this.lastPlayer;
 
       log(
@@ -201,6 +208,7 @@ class Game {
       }
     } else {
       this.currentPlayer.removeDie();
+      this.updatePlayersPositionInTheArray(this.currentPlayer);
       this.lastPlayerThatLostADice = this.currentPlayer;
 
       log(
@@ -221,13 +229,6 @@ class Game {
     log(chalk.hex(chalk.error)("\nROUND ENDS"));
     log("-----------------------------------");
     log("\n");
-
-    // log("Rezulati: koi kolko zarove ima");
-    // log(chalk.hex(chalk.error)("\nROUND ENDS"));
-    // log("-----------------------------------");
-    // Compare dice to rolls
-    // If challenge was right, the challenged player loses 1 dic otherwise the challenger loses 1 die
-    // End of round
   }
 
   checkChallenge() {
@@ -289,7 +290,6 @@ class Game {
 
           await this.promptPlayer(this.players[i]);
           if (this.isChallenge) {
-            // Check win
             return;
           }
         }
