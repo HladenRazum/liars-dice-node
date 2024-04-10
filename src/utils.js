@@ -30,68 +30,6 @@ function drawDice(dice) {
   );
 }
 
-function drawDie(face) {
-  switch (face) {
-    case 1:
-    case "1": {
-      return `
-      
-         *
-            
-      `;
-    }
-
-    case 2:
-    case "2": {
-      return `
-      *
-      
-            *
-      `;
-    }
-
-    case 3:
-    case "3": {
-      return `
-      *     
-         * 
-            *
-      `;
-    }
-
-    case 4:
-    case "4": {
-      return `
-      *     *
-      
-      *     *
-      `;
-    }
-
-    case 5:
-    case "5": {
-      return `
-      *     *
-         *
-      *     *
-      `;
-    }
-
-    case 6:
-    case "6": {
-      return `
-      *     *
-      *     *
-      *     * 
-      `;
-    }
-
-    default: {
-      return "Invalid face. Please check the rolls on your dice again.";
-    }
-  }
-}
-
 function faceToString(face) {
   switch (face) {
     case 1:
@@ -134,6 +72,5 @@ module.exports = {
   generateRandomDie,
   isChallengeSymbol,
   faceToString,
-  drawDie,
   drawDice,
 };
