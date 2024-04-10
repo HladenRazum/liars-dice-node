@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+const chalk = require("chalk");
 const { NUM_DIE_SIDES, CHALLENGE_SYMBOL } = require("./constants");
 
 function generateRandomDie() {
@@ -10,20 +10,24 @@ function isChallengeSymbol(text) {
 }
 
 function drawDice(dice) {
-  let ones = dice['1'] ?? 0;
-  let twos = dice['2'] ?? 0;
-  let threes = dice['3'] ?? 0;
-  let fours = dice['4'] ?? 0;
-  let fives = dice['5'] ?? 0;
-  let sixes = dice['6'] ?? 0;
+  let ones = dice["1"] ?? 0;
+  let twos = dice["2"] ?? 0;
+  let threes = dice["3"] ?? 0;
+  let fours = dice["4"] ?? 0;
+  let fives = dice["5"] ?? 0;
+  let sixes = dice["6"] ?? 0;
 
   console.log(
     `
-  (${chalk.yellow(ones)})      (${chalk.yellow(twos)})       (${chalk.yellow(threes)})       (${chalk.yellow(fours)})       (${chalk.yellow(fives)})       (${chalk.yellow(sixes)})  
-               *         *   *     *   *     *   *     *                                                              
-   *                  *                   *      *     *   
-         *         *         *     *   *     *   *     *
-`)
+                 *           *     *     *     *     *     *     *                                                              
+   *                      *                       *        *     *   
+           *           *           *     *     *     *     *     *
+  (${chalk.yellow(ones)})        (${chalk.yellow(
+      twos
+    )})         (${chalk.yellow(threes)})         (${chalk.yellow(
+      fours
+    )})         (${chalk.yellow(fives)})         (${chalk.yellow(sixes)})`
+  );
 }
 
 function drawDie(face) {
@@ -131,6 +135,5 @@ module.exports = {
   isChallengeSymbol,
   faceToString,
   drawDie,
-  drawDice
+  drawDice,
 };
-  

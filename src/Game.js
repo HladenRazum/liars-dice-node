@@ -10,8 +10,7 @@ chalk.important = "#8af25a";
 const log = console.log;
 
 const Player = require("./Player");
-const { NUM_DIE_SIDES } = require("./constants");
-const { faceToString, drawDie, drawDice } = require("./utils");
+const { drawDice, faceToString } = require("./utils");
 
 class Game {
   numPlayers;
@@ -19,9 +18,10 @@ class Game {
   lastBet;
   currentBet;
   isChallenge;
-  isWinning;
   lastPlayer;
   rolls;
+  round;
+  lastPlayerThatLostADice;
 
   constructor(numPlayers = 3) {
     this.numPlayers = numPlayers;
@@ -29,43 +29,49 @@ class Game {
     this.lastBet = null;
     this.currentBet = null;
     this.isChallenge = false;
-    this.isWinning = false;
     this.currentPlayer = null;
     this.lastPlayer = null;
-    this.rolls = {
-      '1': 0,
-      '2': 0,
-      '3': 0,
-      '4': 0,
-      '5': 0,
-      '6': 0
-    };
+    this.lastPlayerThatLostADice = null;
+    this.rolls = {};
+    this.round = 1;
     this.setup();
   }
 
   setup() {
     this.initPlayers();
-    this.updateRolls();
   }
 
   logCurrentRolls() {
-    log(chalk.hex(chalk.notification)("Here are the current rolls: \n"));
+    let rolls = "";
 
-    drawDice(this.rolls)
+    log(chalk.hex(chalk.notification)("Here are the rolls for this round:"));
 
-    // for (const key in this.rolls) {
-    //   if (this.rolls[key] > 0) {
-    //     log(`(${chalk.yellow(this.rolls[key])}) ${drawDie(key)}\n`);
-    //   }
-    // }
+    for (const key in this.rolls) {
+      for (let i = 0; i < this.rolls[key]; i++) {
+        rolls += key + " ";
+      }
+    }
 
-    // for (const key in this.rolls) {
-      
-    //     console.log(`(${chalk.yellow(this.rolls[key] ?? 0)}) ${faceToString(key)}`);
-      
-    // }
+    drawDice(this.rolls);
+    log("\n");
 
-    // log("\n");
+    for (const key in this.rolls) {
+      console.log(
+        `(${chalk.yellow(this.rolls[key] ?? 0)}) ${faceToString(key)}`
+      );
+    }
+
+    log("\n");
+  }
+
+  getTotalDiceCount() {
+    let count = 0;
+
+    for (const key in this.rolls) {
+      count += this.rolls[key];
+    }
+
+    return count;
   }
 
   initPlayers() {
@@ -81,7 +87,9 @@ class Game {
   }
 
   updateRolls() {
+    this.rolls = {};
     let dice = [];
+
     for (const player of this.players) {
       dice.push(...player.getDice());
     }
@@ -95,15 +103,65 @@ class Game {
     });
   }
 
-  play() {
+  rollAllPlayersDice() {
+    this.players.forEach((player) => player.rollDice());
+  }
+
+  reset() {
     this.isChallenge = false;
     this.currentBet = null;
     this.currentPlayer = null;
     this.lastPlayer = null;
+    this.rollAllPlayersDice();
+    this.updateRolls();
+  }
 
+  // TODO: Check if only one player has dice
+  checkWinning() {
+    let playersWithDiceCount = 0;
+
+    this.players.forEach((player) => {
+      if (player.hasDice()) {
+        playersWithDiceCount++;
+      }
+    });
+
+    return playersWithDiceCount < 2;
+  }
+
+  getActivePlayersNames() {
+    let names = "";
+    this.players.forEach((player) => {
+      if (player.hasDice()) {
+        names += player.name + " ";
+      }
+    });
+
+    return names;
+  }
+
+  async play() {
     console.clear();
     log(chalk.gray(`Game has started with ${this.players.length} players`));
-    this.playRound();
+
+    while (!this.checkWinning()) {
+      log("Current round: " + chalk.hex(chalk.error)(this.round));
+      log(
+        "Active players: " +
+          chalk.hex(chalk.important)(this.getActivePlayersNames())
+      );
+      this.reset();
+      await this.playRound();
+      this.round++;
+    }
+
+    console.log(
+      "GAME ENDED AT " + chalk.hex(chalk.notification)(this.round) + "th ROUND"
+    );
+    console.log("SHOW SOME INFO");
+    console.log(
+      "WINNER IS: " + chalk.hex(chalk.notification)(this.currentPlayer.name)
+    );
   }
 
   challenge() {
@@ -121,31 +179,49 @@ class Game {
         "\n"
     );
 
-    // Ako currentPlayer successfully challenged last player
     this.logCurrentRolls();
     if (this.checkChallenge()) {
-      //
+      this.lastPlayer.removeDie();
+      this.lastPlayerThatLostADice = this.lastPlayer;
+
       log(
-        `CURRENT_PLAYER[${this.currentPlayer.name}] won the challenge and LAST_PLAYER[${this.lastPlayer.name}] loses a die`
+        `${chalk.hex(chalk.notification)(
+          this.currentPlayer.name
+        )} won the challenge and ${chalk.hex(chalk.notification)(
+          this.lastPlayer.name
+        )} loses a die`
       );
-    }
-    // Ako eo oburkal
-    else {
+
+      if (!this.lastPlayer.hasDice()) {
+        log(
+          `${chalk.hex(chalk.notification)(
+            this.lastPlayer.name
+          )} drop out as they have no dice left`
+        );
+      }
+    } else {
+      this.currentPlayer.removeDie();
+      this.lastPlayerThatLostADice = this.currentPlayer;
+
       log(
-        `CURRENT_PLAYER[${this.currentPlayer.name}] lost the challenge and loses a die`
+        `${chalk.hex(chalk.notification)(
+          this.currentPlayer.name
+        )} lost the challenge and loses a die`
       );
+
+      if (!this.currentPlayer.hasDice()) {
+        log(
+          `${chalk.hex(chalk.notification)(
+            this.lastPlayer.name
+          )} drop out as they have no dice left`
+        );
+      }
     }
 
-    // log(
-    //   chalk.greenBright(
-    //     "Zaloga na lastPlayer ne e spoluchliv i toi gubi edin zar"
-    //   )
-    // );
-    // log(
-    //   chalk.greenBright(
-    //     "currentPlayer neuspeshno predizvika lastPlayer. CurrentPlayer loses 1 zar"
-    //   )
-    // );
+    log(chalk.hex(chalk.error)("\nROUND ENDS"));
+    log("-----------------------------------");
+    log("\n");
+
     // log("Rezulati: koi kolko zarove ima");
     // log(chalk.hex(chalk.error)("\nROUND ENDS"));
     // log("-----------------------------------");
@@ -172,7 +248,11 @@ class Game {
 
   async promptPlayer(player) {
     log("\n");
-    log(`Total dice in play: ${chalk.hex(chalk.notification)("15")}`);
+    log(
+      `Total dice in play: ${chalk.hex(chalk.notification)(
+        this.getTotalDiceCount()
+      )}`
+    );
     log("Current player:", chalk.hex(chalk.notification)(player.name));
     log(
       `Current dice for ${chalk.hex(chalk.notification)(
@@ -190,6 +270,7 @@ class Game {
       ? 'Raise the bet or challenge by pressing "C": '
       : "Place your bet: amount, face: ";
 
+    log("\n");
     const answer = await rl.question(question);
 
     if (answer.toUpperCase() === "C") {
@@ -203,12 +284,14 @@ class Game {
   async playRound() {
     while (!this.isChallenge) {
       for (let i = 0; i < this.players.length; i++) {
-        this.currentPlayer = this.players[i];
+        if (this.players[i].getIsActive()) {
+          this.currentPlayer = this.players[i];
 
-        await this.promptPlayer(this.players[i]);
-        if (this.isChallenge) {
-          // Check win
-          return;
+          await this.promptPlayer(this.players[i]);
+          if (this.isChallenge) {
+            // Check win
+            return;
+          }
         }
       }
     }
