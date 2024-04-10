@@ -3,14 +3,15 @@ const rl = require("readline/promises").createInterface({
   output: process.stdout,
 });
 const chalk = require("chalk");
+const Player = require("./Player");
+const Bet = require("./Bet");
+const { drawDice, faceToString } = require("./utils");
+const { NUM_DIE_SIDES, CHALLENGE_SYMBOL } = require("./constants");
+
 chalk.error = "#f5334d";
 chalk.notification = "#178bff";
 chalk.important = "#8af25a";
-
 const log = console.log;
-
-const Player = require("./Player");
-const { drawDice, faceToString } = require("./utils");
 
 class Game {
   numPlayers;
@@ -123,6 +124,27 @@ class Game {
     this.updateRolls();
   }
 
+  validateBet(answer) {
+    let isValid = true;
+    let [amount, face] = answer.split(",");
+
+    amount = parseInt(amount);
+    face = parseInt(face);
+
+    const isNotNumber = isNaN(amount) || isNaN(face);
+    const isInLimits =
+      face <= NUM_DIE_SIDES && amount <= this.getTotalDiceCount();
+
+    const isFollowingPreviousBet = this.currentBet
+      ? amount > this.currentBet.amount || face > this.currentBet.face
+      : true;
+
+    if (!isInLimits || isNotNumber || !isFollowingPreviousBet) {
+      isValid = false;
+    }
+    return isValid;
+  }
+
   checkWinning() {
     let playersWithDiceCount = 0;
 
@@ -148,10 +170,14 @@ class Game {
 
   async play() {
     console.clear();
-    log(chalk.gray(`Game has started with ${this.players.length} players`));
+    log(
+      chalk.yellowBright(
+        `Game has started with ${this.players.length} players\n`
+      )
+    );
 
     while (!this.checkWinning()) {
-      log("Current round: " + chalk.hex(chalk.error)(this.round));
+      log("Current round: " + chalk.hex(chalk.notification)(this.round));
       log(
         "Active players: " +
           chalk.hex(chalk.important)(this.getActivePlayersNames())
@@ -181,7 +207,7 @@ class Game {
         " has challenged " +
         chalk.hex(chalk.notification)(this.lastPlayer.name) +
         " on their bet: " +
-        chalk.hex(chalk.important)(this.currentBet) +
+        chalk.hex(chalk.important)(this.currentBet.getAsString()) +
         "\n"
     );
 
@@ -235,10 +261,7 @@ class Game {
     let hasChallengerGuessedCorrectly;
     let bet = this.currentBet;
 
-    let amount = bet.split(",")[0];
-    let face = bet.split(",")[1];
-
-    if (this.rolls[face] < amount || !this.rolls[face]) {
+    if (this.rolls[bet.face] < bet.amount || !this.rolls[bet.face]) {
       hasChallengerGuessedCorrectly = true;
     } else {
       hasChallengerGuessedCorrectly = false;
@@ -248,9 +271,8 @@ class Game {
   }
 
   async promptPlayer(player) {
-    log("\n");
     log(
-      `Total dice in play: ${chalk.hex(chalk.notification)(
+      `\nTotal dice in play: ${chalk.hex(chalk.notification)(
         this.getTotalDiceCount()
       )}`
     );
@@ -262,22 +284,31 @@ class Game {
     );
     this.lastPlayer &&
       log(
-        `Current bet: ${chalk.hex(chalk.important)(this.currentBet)} made by ${
-          this.lastPlayer.name
-        }`
+        `Current bet: ${chalk.hex(chalk.important)(
+          this.currentBet.getAsString()
+        )} made by ${chalk.gray(this.lastPlayer.name)}`
       );
 
     let question = this.lastPlayer
-      ? 'Raise the bet or challenge by pressing "C": '
+      ? `Raise the bet or challenge by pressing "${CHALLENGE_SYMBOL}": `
       : "Place your bet: amount, face: ";
 
     log("\n");
+
     const answer = await rl.question(question);
 
-    if (answer.toUpperCase() === "C") {
+    if (answer.toUpperCase() === CHALLENGE_SYMBOL && this.lastPlayer) {
       this.challenge();
     } else {
-      this.currentBet = answer;
+      if (this.validateBet(answer)) {
+        this.currentBet = new Bet({
+          amount: parseInt(answer.split(",")[0]),
+          face: parseInt(answer.split(",")[1]),
+        });
+      } else {
+        log(chalk.hex(chalk.error)("\nInvalid bet. Please try again."));
+        await this.promptPlayer(this.currentPlayer);
+      }
     }
     this.lastPlayer = player;
   }
@@ -289,6 +320,7 @@ class Game {
           this.currentPlayer = this.players[i];
 
           await this.promptPlayer(this.players[i]);
+
           if (this.isChallenge) {
             return;
           }

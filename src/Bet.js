@@ -1,13 +1,14 @@
 class Bet {
-  type;
   amount;
-  num;
+  face;
 
-  constructor({ type, amount, num }) {
-    this.type = type;
+  constructor({ amount, face }) {
     this.amount = amount;
-    this.num = num;
-    console.log(this);
+    this.face = face;
+  }
+
+  getAsString() {
+    return this.amount + ", " + this.face;
   }
 }
 
