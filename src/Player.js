@@ -6,7 +6,7 @@ class Player {
   isActive;
 
   constructor(name) {
-    this.dice = [...Array(2)].fill(0);
+    this.dice = [...Array(DICE_PER_PLAYER)].fill(0);
     this.name = name;
     this.isActive = true;
   }
