@@ -6,7 +6,12 @@ const chalk = require("chalk");
 const Player = require("./Player");
 const Bet = require("./Bet");
 const { drawDice, faceToString } = require("./utils");
-const { NUM_DIE_SIDES, CHALLENGE_SYMBOL } = require("./constants");
+const {
+  NUM_DIE_SIDES,
+  CHALLENGE_SYMBOL,
+  DEFAULT_NUM_PLAYERS,
+  PLAYER_TYPES,
+} = require("./constants");
 
 chalk.error = "#f5334d";
 chalk.notification = "#178bff";
@@ -24,7 +29,7 @@ class Game {
   round;
   lastPlayerThatLostADice;
 
-  constructor(numPlayers = 3) {
+  constructor(numPlayers = DEFAULT_NUM_PLAYERS) {
     this.numPlayers = numPlayers;
     this.players = [];
     this.lastBet = null;
@@ -39,7 +44,7 @@ class Game {
   }
 
   setup() {
-    this.initPlayers();
+    this.createPlayers();
   }
 
   logCurrentRolls() {
@@ -75,13 +80,13 @@ class Game {
     return count;
   }
 
-  initPlayers() {
+  createPlayers() {
     for (let i = 0; i < this.numPlayers; i++) {
       let p;
       if (i === 0) {
-        p = new Player("hladenRazum");
+        p = new Player({ name: "hladenRazum", type: PLAYER_TYPES.HUMAN });
       } else {
-        p = new Player(`computer_${i}`);
+        p = new Player({ name: `computer_${i}`, type: PLAYER_TYPES.COMPUTER });
       }
       this.players.push(p);
     }

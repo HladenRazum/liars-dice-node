@@ -4,11 +4,13 @@ const { DICE_PER_PLAYER } = require("./constants");
 class Player {
   dice;
   isActive;
+  type;
 
-  constructor(name) {
+  constructor({ name, type }) {
     this.dice = [...Array(DICE_PER_PLAYER)].fill(0);
     this.name = name;
     this.isActive = true;
+    this.type = type;
   }
 
   rollDice() {
