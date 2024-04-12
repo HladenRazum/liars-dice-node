@@ -275,6 +275,31 @@ class Game {
     return hasChallengerGuessedCorrectly;
   }
 
+  // Return a random boolean that occasionally will be true
+  feelingLucky(amountOfLuck = 0.27) {
+    const randomValue = Math.random();
+    return randomValue <= amountOfLuck;
+  }
+
+  async promptComputer(computerPlayer) {
+    let feelingLucky = this.feelingLucky();
+
+    log(
+      `${chalk.hex(chalk.notification)(
+        computerPlayer.name
+      )} is placing their bet...`
+    );
+
+    if (this.currentBet) {
+    } else {
+      /** How should a computer choose a new bet
+       * 1 - decide where it should challenge based on the current bet and the dice on the table + feelingRisky factor
+       * 2 - choose the biggest amount of same faces
+       * 3 - calculate the most optimal bet based on the amount of dice on the table + feelingRisky factor
+       */
+    }
+  }
+
   async promptPlayer(player) {
     log(
       `\nTotal dice in play: ${chalk.hex(chalk.notification)(
@@ -321,14 +346,21 @@ class Game {
   async playRound() {
     while (!this.isChallenge) {
       for (let i = 0; i < this.players.length; i++) {
-        if (this.players[i].getIsActive()) {
-          this.currentPlayer = this.players[i];
+        const player = this.players[i];
 
-          await this.promptPlayer(this.players[i]);
+        if (!player.getIsActive()) {
+          return;
+        }
 
-          if (this.isChallenge) {
-            return;
-          }
+        this.currentPlayer = player;
+
+        if (player.type === PLAYER_TYPES.HUMAN) {
+          await this.promptPlayer(player);
+        } else {
+          await this.promptComputer(player);
+        }
+        if (this.isChallenge) {
+          return;
         }
       }
     }

@@ -3,10 +3,12 @@ const rl = require("readline/promises").createInterface({
   output: process.stdout,
 });
 
+const chalk = require("chalk");
 const Game = require("./Game");
 
 async function main() {
-  console.log("Welcome to Liar's Dice!\n");
+  console.clear();
+  console.log(chalk.red("Welcome to Liar's Dice!\n"));
   let answer = await rl.question("Number of players: ");
   answer = parseInt(answer);
 
