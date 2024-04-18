@@ -3,6 +3,7 @@ const { DICE_PER_PLAYER } = require("./constants");
 
 class Player {
   dice;
+  diceObj;
   isActive;
   type;
 
@@ -11,10 +12,22 @@ class Player {
     this.name = name;
     this.isActive = true;
     this.type = type;
+    this.diceObj = {};
+  }
+
+  initDiceObj() {
+    let obj = {};
+
+    for (const face of this.dice) {
+      obj[face] = obj[face] + 1 || 1;
+    }
+
+    this.diceObj = { ...obj };
   }
 
   rollDice() {
     this.dice = this.dice.map(() => generateRandomDie());
+    this.initDiceObj();
   }
 
   hasDice() {
@@ -35,6 +48,32 @@ class Player {
 
   getDice() {
     return this.dice;
+  }
+
+  getFaceAmount(face) {
+    return this.diceObj[face] ?? 0;
+  }
+
+  // Return some die face that will be used for the new bet
+  pickHighestOccuringDie() {
+    let counter = {};
+    let die = {
+      amount: 0,
+      face: null,
+    };
+
+    for (const face of this.dice) {
+      counter[face] = counter[face] + 1 || 1;
+    }
+
+    for (const key in counter) {
+      if (counter[key] > die.amount) {
+        die.amount = counter[key];
+        die.face = key;
+      }
+    }
+
+    return die;
   }
 }
 
