@@ -294,49 +294,6 @@ class Game {
     return randomValue <= amountOfLuck;
   }
 
-  // // Calculate the chance of amount of die to occur in the current roll
-  // calclucateProbabilityOfBet(amount, face) {
-  //   log(chalk.red("CALCULATE THE POSSIBILITY..."));
-  //   log(chalk.blue("WHAT SHOULD BE THE RETURN VALUE?"));
-
-  //   // const atLeastCurrentAmount = P
-
-  //   return false;
-  // }
-
-  // calculateMaximumAmountProbabilty(bet) {
-  //   const { amount, face } = bet;
-  //   const totalDiceCount = this.getTotalDiceCount();
-  //   // const currentPlayerAmountOfSameFace = this.currentPlayer.getFaceAmount(face);
-  //   // const newAmount = amount + currentPlayerAmountOfSameFace;
-
-  //   /**
-  //    * какъв е шанса да се паднат {amount} {face} от {totalDiceCount}
-  //    */
-  //   const probabilityOfNotGettingTwoFace = Math.pow(5 / 6);
-  //   const probabilityOfGettingExactlyOneSix =
-  //     (1 / 6) * Math.pow(5 / 6, 9) * totalDiceCount;
-
-  //   console.log({ probabilityOfGettingExactlyOneSix });
-
-  //   //  1, 1 (amount: 1, face: one);
-  //   // Kakuv e shansa v this.rolls tova da se sluchi
-  //   log(
-  //     `I have ${this.currentPlayer.getFaceAmount(face)} ${chalk.red(
-  //       faceToString(face)
-  //     )}`
-  //   );
-
-  //   // const maxPossibleAmount = calculateProbability();
-
-  //   // const currentPlayerAmountOfSameFace = this.currentPlayer.getFaceAmount(face);
-  //   // if (currentPlayerAmountOfSameFace && maxPossibleAmount) {
-
-  //   // }
-
-  //   console.log(bet);
-  //   console.log(this.currentPlayer);
-  // }
   calculateBetProbability(bet) {
     const amount = bet.amount;
     const n = this.getTotalDiceCount();
@@ -344,13 +301,6 @@ class Game {
     return p;
   }
 
-  /**
-   * WARNING: Calulations might get heavy and slow the program (need testing)
-   *
-   * returns the probability of getting an amount of dice with the same face
-   *
-   * @param {number} amount
-   */
   calclulateAtLeastAmountProbability(amount, numDice) {
     let sum = 0;
 
@@ -375,10 +325,13 @@ class Game {
   }
 
   figureoutBet() {
+    let newFace, newAmount;
+    const numDice = this.getTotalDiceCount();
+    const avgAmount = numDice / NUM_DIE_SIDES;
+    let newDie = this.currentPlayer.pickHighestOccuringDie();
+
     if (this.currentBet) {
-      const numDice = this.getTotalDiceCount();
       const { amount, face } = this.currentBet;
-      const avgAmount = numDice / NUM_DIE_SIDES;
       const isPossibleNewBet =
         this.currentBet.amount !== numDice &&
         parseInt(this.currentBet.face) !== NUM_DIE_SIDES;
@@ -389,92 +342,47 @@ class Game {
         return this.challenge();
       } else {
         const ownedAmountOfSameFace = this.currentPlayer.getFaceAmount(face);
-        let newDie = this.currentPlayer.pickHighestOccuringDie();
-        let newFace, newAmount;
+
         // TODO: Place the bet with newFace, newAmount
 
         if (ownedAmountOfSameFace === 0) {
-          if (parseInf(newDie.face) > face) {
-            newFace = newDie.face;
+          if (parseInt(newDie.face) < face) {
+            newFace = +face + 1;
+            newAmount = avgAmount;
           }
-
-          let newAmount = newDie.amount;
-          if (newFace < face) {
-            newFace = face + 1;
-          }
-
-          // increase face and set amount
         } else if (ownedAmountOfSameFace > 1 && this.feelingLucky(0.15)) {
-          // increase amount with 2
-          newFace = face;
+          newFace = +face;
           newAmount = amount + 2;
         } else {
-          // increase amount and face
+          newFace = +face;
+          newAmount = amount + 1;
         }
       }
+    } else {
+      newAmount = newDie.amount;
+      newFace = newDie.face;
+      console.log({ newAmount });
+      console.log({ newFace });
+    }
 
-      /**
-       * 1. Check if computer should challenge the player
-       *   - what is the probability of the current bet (do the computer has some amoun of the same face)
-       * 2. Check if computer should increase the amount or face
-       *   - should not increase the max possible bet
-       */
-      // What is the change that the current bet will be successful?
-      // Should challenge or increase bet/
-      // To add logic for the computer players to place bets in Liars Dice, you can implement a simple strategy based on the current bid and the computer's own dice rolls. Here's a basic approach:
-      // Calculate probabilities: Based on the current bid, calculate the probability of the bid being true. For example, if the previous bid is "3 sixes", count how many sixes the computer already has and how many dice rolls it will have in total.
-      // Evaluate the risk: Compare the calculated probability with a threshold. If the probability is above the threshold, the computer can confidently make a bid. Otherwise, the computer may choose to challenge the previous bid.
-      // Bid intelligently: If the computer decides to make a bid, it can choose a value and quantity strategically. For instance, it can bid slightly higher than the previous bid to increase the chance of bluffing the opponent.
-    }
-    // FIXME: Ако сме първия играч за този рунд и все още няма залог
-    else {
-      // let { amount, face } = this.currentPlayer.pickHighestOccuringDie();
-      // let n = this.getTotalDiceCount();
-      // const p = (factorial(n) / factorial(amount)) * factorial(n - amount);
-      // console.log(p);
-      /**
-       * 1. Decide which face and amount should put
-       * 2. Calculate theoretical probability of the face
-       * 3. Decide whether to risk it and put
-       */
-      // TODO: Decide what bet to place
-      /** How should a computer choose a new bet
-       * 1 - decide where it should challenge based on the current bet and the dice on the table + feelingRisky factor
-       * 2 - choose the biggest amount of same faces
-       * 3 - calculate the most optimal bet based on the amount of dice on the table + feelingRisky factor
-       */
-    }
+    const bet = new Bet({
+      amount: parseInt(newAmount),
+      face: newFace.toString(),
+    });
+
+    this.placeBet(bet);
+    this.lastPlayer = this.currentPlayer;
 
     // TODO: return a new Bet object
   }
 
   async promptComputer(computerPlayer) {
-    // console.log(this.currentPlayer);
-    // console.log(this.lastPlayer);
     log(
       `${chalk.hex(chalk.notification)(
         computerPlayer.name
       )} is placing their bet...`
     );
-    // log(this.currentBet);
-    // log(this.currentPlayer.dice);
-
-    // let thinkThatLastPlayerIsBluffing = this.feelingLucky(0.1);
-
-    // if (thinkThatLastPlayerIsBluffing) {
-    //   log(
-    //     `I think that ${chalk.hex(chalk.notification)(
-    //       this.lastPlayer.name
-    //     )} is bluffing!`
-    //   );
-    //   this.challenge();
-    // } else {
-    //   const computerBet = this.figureoutBet();
-    //   this.placeBet(computerBet);
-    // }
-
     const computer = this.figureoutBet();
-
     this.lastPlayer = computerPlayer;
   }
 
@@ -484,7 +392,6 @@ class Game {
         this.getTotalDiceCount()
       )}`
     );
-    log(chalk.red(`average: ${this.getTotalDiceCount() / 6}`));
     log("Current player:", chalk.hex(chalk.notification)(player.name));
     log(
       `Current dice for ${chalk.hex(chalk.notification)(
