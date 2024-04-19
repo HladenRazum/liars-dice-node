@@ -1,3 +1,5 @@
+const { faceToString } = require("./utils");
+
 class Bet {
   amount;
   face;
@@ -8,7 +10,7 @@ class Bet {
   }
 
   getAsString() {
-    return this.amount + ", " + this.face;
+    return this.amount + " " + faceToString(this.face);
   }
 }
 

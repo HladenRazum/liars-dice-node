@@ -5,7 +5,7 @@ const rl = require("readline/promises").createInterface({
 const chalk = require("chalk");
 const Player = require("./Player");
 const Bet = require("./Bet");
-const { drawDice, faceToString, factorial } = require("./utils");
+const { drawDice, faceToString } = require("./utils");
 const {
   NUM_DIE_SIDES,
   CHALLENGE_SYMBOL,
@@ -136,8 +136,8 @@ class Game {
       `${chalk.hex(chalk.notification)(
         this.currentPlayer.name
       )} is betting ${chalk.hex(chalk.important)(
-        this.currentBet.amount
-      )}, ${chalk.hex(chalk.important)(this.currentBet.face)}`
+        this.currentBet.getAsString()
+      )}`
     );
   }
 
@@ -196,22 +196,27 @@ class Game {
   }
 
   logWildOnesMode() {
-    log(chalk.red(`Wild Ones: ${this.isWildMode ? "ON" : "OFF"}`));
+    log(
+      "Wild Ones: " +
+        chalk.hex(chalk.notification)(this.isWildMode ? "ON" : "OFF")
+    );
   }
 
   async play() {
     console.clear();
     log(
-      chalk.yellowBright(`Game has started with ${this.players.length} players`)
+      chalk.hex(chalk.error)(
+        `Game has started with ${this.players.length} players.`
+      )
     );
-    this.logWildOnesMode();
     log("\n");
     while (!this.checkWinning()) {
-      log(chalk.red(`Wild Ones: ${this.isWildMode ? "ON" : "OFF"}`));
+      this.logWildOnesMode();
       log("Current round: " + chalk.hex(chalk.notification)(this.round));
       log(
         "Active players: " +
-          chalk.hex(chalk.important)(this.getActivePlayersNames())
+          chalk.hex(chalk.important)(this.getActivePlayersNames()) +
+          "\n"
       );
       this.reset();
       await this.playRound();
@@ -230,21 +235,21 @@ class Game {
 
   challenge() {
     this.isChallenge = true;
-
     log("\n");
     log(chalk.hex(chalk.error)("CHALLENGE\n"));
-
     this.logCurrentRolls();
+    log(
+      chalk.hex(chalk.notification)(this.currentPlayer.name) +
+        " has challenged " +
+        chalk.hex(chalk.notification)(this.lastPlayer.name) +
+        " on their bet: " +
+        chalk.hex(chalk.important)(this.currentBet.getAsString())
+    );
+
     if (this.checkChallenge()) {
       this.lastPlayer.removeDie();
       this.updatePlayersPositionInTheArray(this.lastPlayer);
-      log(
-        chalk.hex(chalk.notification)(this.currentPlayer.name) +
-          " has challenged " +
-          chalk.hex(chalk.notification)(this.lastPlayer.name) +
-          " on their bet: " +
-          chalk.hex(chalk.important)(this.currentBet.getAsString())
-      );
+
       log(
         `${chalk.hex(chalk.notification)(
           this.currentPlayer.name
@@ -313,36 +318,6 @@ class Game {
   feelingLucky(amountOfLuck = 0.27) {
     const randomValue = Math.random();
     return randomValue <= amountOfLuck;
-  }
-
-  calculateBetProbability(bet) {
-    const amount = bet.amount;
-    const n = this.getTotalDiceCount();
-    const p = factorial(n) / (factorial(amount) * factorial(n - amount));
-    return p;
-  }
-
-  calclulateAtLeastAmountProbability(amount, numDice) {
-    let sum = 0;
-
-    for (let i = amount; i < numDice; i++) {
-      const probability = this.calculateExactAmountProbability(i, numDice);
-      sum += probability;
-    }
-
-    return sum;
-  }
-
-  calculateExactAmountProbability(amount, numDice) {
-    const combinationsCoefficient =
-      factorial(numDice) / (factorial(amount) * factorial(numDice - amount));
-    const successProbability = 1 / NUM_DIE_SIDES;
-    const failProbability = 5 / NUM_DIE_SIDES;
-    return (
-      combinationsCoefficient *
-      Math.pow(successProbability, amount) *
-      Math.pow(failProbability, numDice - amount)
-    );
   }
 
   figureoutBet() {
@@ -416,10 +391,6 @@ class Game {
 
   async promptPlayer(player) {
     log(
-      chalk.gray("hint: averageAmountPerFace for is ") +
-        chalk.redBright(this.getTotalDiceCount() / NUM_DIE_SIDES)
-    );
-    log(
       `\nTotal dice in play: ${chalk.hex(chalk.notification)(
         this.getTotalDiceCount()
       )}`
@@ -443,6 +414,12 @@ class Game {
 
     log("\n");
 
+    log(
+      chalk.gray("hint: average amoount per face is ") +
+        chalk.hex(chalk.error)(
+          (this.getTotalDiceCount() / NUM_DIE_SIDES).toFixed(3)
+        )
+    );
     const answer = await rl.question(question);
 
     if (answer.toUpperCase() === CHALLENGE_SYMBOL && this.lastPlayer) {

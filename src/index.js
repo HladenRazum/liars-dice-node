@@ -10,17 +10,19 @@ async function main() {
   let withWildOnes = false;
 
   console.clear();
-  console.log(chalk.red("Welcome to Liar's Dice!\n"));
+  console.log(chalk.yellowBright("Welcome to Liar's Dice!\n"));
 
   let wildOnes = await rl.question(
-    "Do you want to include 'The Wild Ones'? (y/n): "
+    "Do you want to activate 'The Wild Ones' mode? (y/n): "
   );
 
   if (wildOnes.toLowerCase() === "y") {
     withWildOnes = true;
   }
 
-  let numPlayers = await rl.question("Number of players: ");
+  let numPlayers = await rl.question(
+    "How many players do you want to play with?: "
+  );
   numPlayers = parseInt(numPlayers);
 
   while (numPlayers < 2) {
