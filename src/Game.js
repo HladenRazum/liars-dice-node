@@ -21,23 +21,23 @@ const log = console.log;
 class Game {
   numPlayers;
   players;
-  lastBet;
   currentBet;
   isChallenge;
   lastPlayer;
   rolls;
   round;
+  isWildMode;
 
-  constructor(numPlayers = DEFAULT_NUM_PLAYERS) {
+  constructor(numPlayers = DEFAULT_NUM_PLAYERS, isWildMode = false) {
     this.numPlayers = numPlayers;
     this.players = [];
-    this.lastBet = null;
     this.currentBet = null;
     this.isChallenge = false;
     this.currentPlayer = null;
     this.lastPlayer = null;
     this.rolls = {};
     this.round = 1;
+    this.isWildMode = isWildMode;
     this.setup();
   }
 
@@ -195,15 +195,19 @@ class Game {
     return names;
   }
 
+  logWildOnesMode() {
+    log(chalk.red(`Wild Ones: ${this.isWildMode ? "ON" : "OFF"}`));
+  }
+
   async play() {
     console.clear();
     log(
-      chalk.yellowBright(
-        `Game has started with ${this.players.length} players\n`
-      )
+      chalk.yellowBright(`Game has started with ${this.players.length} players`)
     );
-
+    this.logWildOnesMode();
+    log("\n");
     while (!this.checkWinning()) {
+      log(chalk.red(`Wild Ones: ${this.isWildMode ? "ON" : "OFF"}`));
       log("Current round: " + chalk.hex(chalk.notification)(this.round));
       log(
         "Active players: " +
@@ -285,10 +289,21 @@ class Game {
     let hasChallengerGuessedCorrectly;
     let bet = this.currentBet;
 
-    if (this.rolls[bet.face] < bet.amount || !this.rolls[bet.face]) {
-      hasChallengerGuessedCorrectly = true;
+    if (this.isWildMode) {
+      if (
+        this.rolls[bet.face] + this.rolls["1"] < bet.amount ||
+        !this.rolls[bet.face]
+      ) {
+        hasChallengerGuessedCorrectly = true;
+      } else {
+        hasChallengerGuessedCorrectly = false;
+      }
     } else {
-      hasChallengerGuessedCorrectly = false;
+      if (this.rolls[bet.face] < bet.amount || !this.rolls[bet.face]) {
+        hasChallengerGuessedCorrectly = true;
+      } else {
+        hasChallengerGuessedCorrectly = false;
+      }
     }
 
     return hasChallengerGuessedCorrectly;
