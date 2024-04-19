@@ -8,7 +8,7 @@ class Player {
   type;
 
   constructor({ name, type }) {
-    this.dice = [...Array(DICE_PER_PLAYER)].fill(0);
+    this.dice = [...Array(2)].fill(0);
     this.name = name;
     this.isActive = true;
     this.type = type;

@@ -132,6 +132,13 @@ class Game {
 
   placeBet(bet) {
     this.currentBet = bet;
+    log(
+      `${chalk.hex(chalk.notification)(
+        this.currentPlayer.name
+      )} is betting ${chalk.hex(chalk.important)(
+        this.currentBet.amount
+      )}, ${chalk.hex(chalk.important)(this.currentBet.face)}`
+    );
   }
 
   reset() {
@@ -155,7 +162,8 @@ class Game {
       face <= NUM_DIE_SIDES && amount <= this.getTotalDiceCount();
 
     const isFollowingPreviousBet = this.currentBet
-      ? amount > this.currentBet.amount || face > this.currentBet.face
+      ? (amount > this.currentBet.amount && face >= this.currentBet.face) ||
+        (amount >= this.currentBet.amount && face > this.currentBet.face)
       : true;
 
     if (!isInLimits || isNotNumber || !isFollowingPreviousBet) {
@@ -207,9 +215,10 @@ class Game {
     }
 
     console.log(
-      "GAME ENDED AT " + chalk.hex(chalk.notification)(this.round) + "th ROUND"
+      "GAME ENDED AFTER " +
+        chalk.hex(chalk.notification)(this.round) +
+        " ROUNDS"
     );
-    console.log("SHOW SOME INFO");
     console.log(
       "WINNER IS: " + chalk.hex(chalk.notification)(this.currentPlayer.name)
     );
@@ -264,7 +273,7 @@ class Game {
       if (!this.currentPlayer.hasDice()) {
         log(
           `${chalk.hex(chalk.notification)(
-            this.lastPlayer.name
+            this.currentPlayer.name
           )} drop out as they have no dice left`
         );
       }
@@ -336,28 +345,29 @@ class Game {
         this.currentBet.amount !== numDice &&
         parseInt(this.currentBet.face) !== NUM_DIE_SIDES;
       const shouldChallenge =
-        (this.feelingLucky(0.3) && amount > avgAmount) || !isPossibleNewBet;
+        (this.feelingLucky(0.2) && amount > avgAmount && amount > 1) ||
+        !isPossibleNewBet;
 
       if (shouldChallenge) {
         return this.challenge();
       } else {
         const ownedAmountOfSameFace = this.currentPlayer.getFaceAmount(face);
 
-        if (ownedAmountOfSameFace === 0) {
-          if (parseInt(newDie.face) < face) {
-            newFace = +face + 1;
-            newAmount = avgAmount;
-          } else {
-            newFace = newDie.face;
-            newAmount = avgAmount + 1;
-          }
-        } else if (ownedAmountOfSameFace > 1 && this.feelingLucky(0.15)) {
-          newFace = +face;
-          newAmount = amount + 2;
-        } else {
-          newFace = +face;
-          newAmount = amount + 1;
-        }
+        // if (ownedAmountOfSameFace === 0) {
+        //   if (parseInt(newDie.face) < face) {
+        //     newFace = +face + 1;
+        //     newAmount = avgAmount;
+        //   } else {
+        //     newFace = newDie.face;
+        //     newAmount = avgAmount + 1;
+        //   }
+        // } else if (ownedAmountOfSameFace > 1 && this.feelingLucky(0.15)) {
+        //   newFace = +face;
+        //   newAmount = amount + 2;
+        // } else {
+        //   newFace = +face;
+        //   newAmount = amount + 1;
+        // }
       }
     } else {
       newAmount = newDie.amount;
@@ -366,22 +376,14 @@ class Game {
 
     const bet = new Bet({
       amount: avgAmount + 1,
-      face: newFace.toString(),
+      face: newDie.face.toString(),
     });
 
     this.placeBet(bet);
-    this.lastPlayer = this.currentPlayer;
-
-    // TODO: return a new Bet object
   }
 
   async promptComputer(computerPlayer) {
-    log(
-      `${chalk.hex(chalk.notification)(
-        computerPlayer.name
-      )} is placing their bet...`
-    );
-    const computer = this.figureoutBet();
+    this.figureoutBet();
     this.lastPlayer = computerPlayer;
   }
 
@@ -440,7 +442,7 @@ class Game {
         const player = this.players[i];
 
         if (!player.getIsActive()) {
-          return;
+          continue;
         }
 
         this.currentPlayer = player;
