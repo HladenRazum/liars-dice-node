@@ -228,22 +228,19 @@ class Game {
     this.isChallenge = true;
 
     log("\n");
-    log("-----------------------------------");
     log(chalk.hex(chalk.error)("CHALLENGE\n"));
-    log(
-      chalk.hex(chalk.notification)(this.currentPlayer.name) +
-        " has challenged " +
-        chalk.hex(chalk.notification)(this.lastPlayer.name) +
-        " on their bet: " +
-        chalk.hex(chalk.important)(this.currentBet.getAsString()) +
-        "\n"
-    );
 
     this.logCurrentRolls();
     if (this.checkChallenge()) {
       this.lastPlayer.removeDie();
       this.updatePlayersPositionInTheArray(this.lastPlayer);
-
+      log(
+        chalk.hex(chalk.notification)(this.currentPlayer.name) +
+          " has challenged " +
+          chalk.hex(chalk.notification)(this.lastPlayer.name) +
+          " on their bet: " +
+          chalk.hex(chalk.important)(this.currentBet.getAsString())
+      );
       log(
         `${chalk.hex(chalk.notification)(
           this.currentPlayer.name
@@ -351,32 +348,47 @@ class Game {
       if (shouldChallenge) {
         return this.challenge();
       } else {
-        const ownedAmountOfSameFace = this.currentPlayer.getFaceAmount(face);
+        const amountSameFace = this.currentPlayer.getFaceAmount(face);
 
-        // if (ownedAmountOfSameFace === 0) {
-        //   if (parseInt(newDie.face) < face) {
-        //     newFace = +face + 1;
-        //     newAmount = avgAmount;
-        //   } else {
-        //     newFace = newDie.face;
-        //     newAmount = avgAmount + 1;
-        //   }
-        // } else if (ownedAmountOfSameFace > 1 && this.feelingLucky(0.15)) {
-        //   newFace = +face;
-        //   newAmount = amount + 2;
-        // } else {
-        //   newFace = +face;
-        //   newAmount = amount + 1;
-        // }
+        if (amountSameFace === 0) {
+          if (newDie.face > face) {
+            newFace = newDie.face;
+            newAmount = newDie.amount + avgAmount;
+          } else {
+            if (face >= 6) {
+              newFace = face;
+              newAmount = amount + 1;
+            } else {
+              newFace = +face + 1;
+              newAmount = avgAmount;
+            }
+          }
+        } else {
+          if (face >= 6) {
+            newFace = face;
+            newAmount = amount + 1;
+          } else {
+            newFace = +face + 1;
+            newAmount = avgAmount;
+          }
+        }
+      }
+
+      if (
+        (newAmount <= amount && newFace < face) ||
+        (newAmount < amount && newFace <= face)
+      ) {
+        newAmount = amount + 1;
+        newFace = face;
       }
     } else {
-      newAmount = newDie.amount;
+      newAmount = newDie.amount + avgAmount;
       newFace = newDie.face;
     }
 
     const bet = new Bet({
-      amount: avgAmount + 1,
-      face: newDie.face.toString(),
+      amount: newAmount,
+      face: newFace.toString(),
     });
 
     this.placeBet(bet);
@@ -389,7 +401,7 @@ class Game {
 
   async promptPlayer(player) {
     log(
-      "hint: averageAmountPerFace for is: " +
+      chalk.gray("hint: averageAmountPerFace for is ") +
         chalk.redBright(this.getTotalDiceCount() / NUM_DIE_SIDES)
     );
     log(
