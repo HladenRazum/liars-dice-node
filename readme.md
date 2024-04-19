@@ -15,4 +15,5 @@ Liar's dice is a class of dice games for two or more players requiring the abili
 2. run `$npm install`
 3. run `$node src/index`
 
+Preview:
 ![Liar's Dice Gif](https://raw.githubusercontent.com/HladenRazum/liars-dice-node/master/src/assets/animation.gif)
