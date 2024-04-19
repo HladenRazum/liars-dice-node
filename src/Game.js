@@ -327,7 +327,7 @@ class Game {
   figureoutBet() {
     let newFace, newAmount;
     const numDice = this.getTotalDiceCount();
-    const avgAmount = numDice / NUM_DIE_SIDES;
+    const avgAmount = Math.ceil(numDice / NUM_DIE_SIDES);
     let newDie = this.currentPlayer.pickHighestOccuringDie();
 
     if (this.currentBet) {
@@ -343,12 +343,13 @@ class Game {
       } else {
         const ownedAmountOfSameFace = this.currentPlayer.getFaceAmount(face);
 
-        // TODO: Place the bet with newFace, newAmount
-
         if (ownedAmountOfSameFace === 0) {
           if (parseInt(newDie.face) < face) {
             newFace = +face + 1;
             newAmount = avgAmount;
+          } else {
+            newFace = newDie.face;
+            newAmount = avgAmount + 1;
           }
         } else if (ownedAmountOfSameFace > 1 && this.feelingLucky(0.15)) {
           newFace = +face;
@@ -361,12 +362,10 @@ class Game {
     } else {
       newAmount = newDie.amount;
       newFace = newDie.face;
-      console.log({ newAmount });
-      console.log({ newFace });
     }
 
     const bet = new Bet({
-      amount: parseInt(newAmount),
+      amount: avgAmount + 1,
       face: newFace.toString(),
     });
 
@@ -387,6 +386,10 @@ class Game {
   }
 
   async promptPlayer(player) {
+    log(
+      "hint: averageAmountPerFace for is: " +
+        chalk.redBright(this.getTotalDiceCount() / NUM_DIE_SIDES)
+    );
     log(
       `\nTotal dice in play: ${chalk.hex(chalk.notification)(
         this.getTotalDiceCount()
